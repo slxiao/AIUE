@@ -38,7 +38,7 @@ def get_hyperlinks(url):
         links.remove("/2018/01/01/demo/")
     return links
 
-'''
+
 gamma = 0.8
 
 q_matrix = np.full((64,64), 10000)
@@ -107,7 +107,7 @@ while stopping_iterations < 1000:
 print(q_matrix)
 
 savetxt('data.csv', q_matrix, delimiter=',')
-'''
+
 q_matrix = loadtxt('data.csv', delimiter=',')
 
 
