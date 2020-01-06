@@ -2,7 +2,12 @@ from __future__ import print_function
 
 import re
 import random
+import sys
+import hashlib
+
+import pandas as pd
 import numpy as np
+np.set_printoptions(threshold=sys.maxsize)
 
 from numpy import savetxt
 from numpy import loadtxt
@@ -11,10 +16,10 @@ from bs4 import BeautifulSoup as bs
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-import sys
-np.set_printoptions(threshold=sys.maxsize)
 
-HOME = "https://slxiao.github.io"
+home = "https://slxiao.github.io"
+browser = create_browser('/usr/bin/chromedriver')
+
 
 def create_browser(webdriver_path):
     browser_options = Options()
@@ -22,44 +27,57 @@ def create_browser(webdriver_path):
     browser_options.add_argument('--no-sandbox')
     return webdriver.Chrome(webdriver_path, chrome_options=browser_options)
 
-browser = create_browser('/usr/bin/chromedriver')
 
-def get_hyperlinks(url):
-    if url.startswith("/"):
-        url = HOME + url
-    browser.get(url)
+def encode_string(string):
+    import hashlib
+    return str(int(hashlib.sha1(string).hexdigest(), 16) % (10 ** 8))
+
+
+def get_actions(state):
+    browser.get(state)
     html = bs(browser.page_source, "lxml")
-
-    links = []
+    actions = []
     for item in html.find_all("a"):
-        if "href" in item.attrs and any([item.attrs["href"].startswith(i) for i in ["/", "home"]]):
-            links.append(item.attrs["href"])
-    if "/2018/01/01/demo/" in links:
-        links.remove("/2018/01/01/demo/")
-    return links
+        if "href" in item.attrs and item.attrs["href"].startswith("/") and item.attrs["href"] != "/2018/01/01/demo/" and item.text.strip():
+            actions.append(home + item.attrs["href"] + "||" + encode_string(item.attrs["href"] + item.text))
+    return actions
 
 
+
+iterations = 0
 gamma = 0.8
+current_state = home
+quality_value_df = pd.DataFrame(index=[current_state])
+action_execution_df = pd.DataFrame(index=[current_state])
+available_actions = get_actions(current_state)
 
-q_matrix = np.full((64,64), 10000)
+while iterations < 1000:
+    
+    for action in available_actions:
+        if action not in quality_value_df.columns:
+            quality_value_df[action] = 10000
+        if action not in action_execution_df.columns:
+            action_execution_df[action] = 0
+    
+    best_action = quality_value_df.loc[current_state, :][available_actions].argmax()
 
-current_url = "https://slxiao.github.io"
-current_state = hash(current_url) % 64
+    next_state = best_action.split("||")[0]
+    next_available_actions = get_actions(next_state)
 
-stopping_iterations = 0
+    if next_state not in quality_value_df.index:
+        quality_value_df.loc[next_state] = 0
+    if next_state not in action_execution_df.index:
+        action_execution_df.loc[next_state] = 0
 
-state_action_record = np.zeros((64,64))
+    for action in next_available_actions:
+        if action not in quality_value_df:
+            quality_value_df[action] = 10000
 
-#links_mapping = {}
+    available_urls = get_urls(current_url)
+    update_url_state_mapping(available_urls)
 
-#links_mapping[current_state] = current_url
-
-while stopping_iterations < 1000:
-    available_links = get_hyperlinks(current_url)
-    available_actions = [hash(link) % 64 for link in available_links]
-
-    #links_mapping.update({available_actions[i]: available_links[i] for i in range(len(available_links))})
-
+    available_actions = [url_to_state[url] for url in available_urls]
+    
     max_q_value = -1
     max_q_action = None
     max_q_link = ""
