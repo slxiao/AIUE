@@ -20,8 +20,6 @@ def create_browser(webdriver_path):
 
 
 def get_hyperlinks(browser, url):
-    if url.startswith("/"):
-        url = HOME + url
     browser.get(url)
     html = bs(browser.page_source, "lxml")
 
@@ -37,33 +35,32 @@ def main():
     browser = create_browser('/usr/bin/chromedriver')
 
     click_number = 0
-    unique_links = []
+    unique_links = [HOME]
     points = [(click_number, len(unique_links))]
-    links = get_hyperlinks(browser, HOME)
     
+    current_link = HOME
     while click_number < 1000:
-        if click_number > 0 and not click_number % 100:
-            links = get_hyperlinks(browser, HOME)
-        
-        if links:
-            link = random.choice(links)
-            links = get_hyperlinks(browser, link)
+        links = get_hyperlinks(browser, current_link)
 
-            click_number += 1
-            if link not in unique_links:
-                unique_links.append(link)
-            points.append((click_number, len(unique_links)))
-            print(click_number, len(unique_links))
-        else:
-            print("sub links of %s are empty, exit from loop" % link)
-            break
+        current_link = HOME + random.choice(links)
+        if current_link not in unique_links:
+            unique_links.append(current_link)
+        points.append((click_number, len(unique_links)))
+        click_number += 1
+        if not click_number % 100:
+            current_link = HOME
+        print(click_number, len(unique_links))
     
-    return points
+    print(unique_links)
+
 
 if __name__ == "__main__":
+    main()
+    '''
     result = []
     for i in range(10):
         result.append((i, main()))
     
     with open("data.txt", "wb") as f:
         f.write(str(result))
+    '''

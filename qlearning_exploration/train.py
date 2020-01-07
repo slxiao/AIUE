@@ -10,9 +10,6 @@ import pandas as pd
 import numpy as np
 np.set_printoptions(threshold=sys.maxsize)
 
-from numpy import savetxt
-from numpy import loadtxt
-
 from bs4 import BeautifulSoup as bs
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -49,7 +46,7 @@ gamma = 0.8
 state_action_qvalues = pd.DataFrame(index=[home]) 
 state_action_exetimes = pd.DataFrame(index=[home]) 
 
-while iteration < 1000:
+while iteration < 10000:
     current_state = np.random.choice(state_action_qvalues.index)
     available_actions = get_actions(current_state)
 
@@ -88,5 +85,31 @@ while iteration < 1000:
 
     iteration += 1
 
+    print("iteration: %s, current_state: %s, next_state: %s" % (iteration, current_state, next_state))
 
-print(state_action_qvalues)
+
+state_action_qvalues.to_csv('state_action_qvalues.csv')
+state_action_exetimes.to_csv('state_action_exetimes.csv')
+
+state_action_qvalues = pd.read_csv("state_action_qvalues.csv", index_col=0)
+
+click_number = 0
+current_state = home
+unique_states = [home]	
+points = [(click_number, len(unique_states))]
+
+while click_number < 1000:	
+    available_actions = get_actions(current_state)
+    best_action = state_action_qvalues.loc[current_state][available_actions].nlargest().sample().index[0]
+    #best_action = state_action_qvalues.loc[current_state][available_actions].idxmax()
+    print(current_state, best_action)
+    current_state = best_action.split("||")[0]
+    if current_state not in unique_states:
+        unique_states.append(current_state)
+    points.append((click_number, len(unique_states)))
+    click_number += 1
+    if not click_number % 100:
+        current_state = home
+    print(click_number, len(unique_states))
+
+print(unique_states)
