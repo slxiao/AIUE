@@ -52,7 +52,7 @@ state_action_exetimes = pd.DataFrame(index=[current_state])
 for action in available_actions:
     state_action_qvalues[action] = 10000
     state_action_exetimes[action] = 0
-
+all_states = [home]
 while iteration < 1000:
     all_states += [i.split("||")[0] for i in available_actions]
     #best_action = state_action_qvalues.loc[current_state][available_actions].nlargest().sample().index[0]
