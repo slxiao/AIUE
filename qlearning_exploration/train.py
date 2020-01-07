@@ -43,26 +43,26 @@ def get_actions(state):
 
 iteration = 0
 gamma = 0.8
-state_action_qvalues = pd.DataFrame(index=[home]) 
-state_action_exetimes = pd.DataFrame(index=[home]) 
 
-while iteration < 10000:
-    current_state = np.random.choice(state_action_qvalues.index)
-    available_actions = get_actions(current_state)
+unique_states = [home]
+current_state = home
+available_actions = get_actions(current_state)
+state_action_qvalues = pd.DataFrame(index=[current_state]) 
+state_action_exetimes = pd.DataFrame(index=[current_state]) 
+for action in available_actions:
+    state_action_qvalues[action] = 10000
+    state_action_exetimes[action] = 0
 
-    for action in available_actions:
-        if action not in state_action_qvalues.columns:
-            state_action_qvalues[action] = 0
-            state_action_qvalues.at[current_state, action] = 10000
-        if action not in state_action_exetimes.columns:
-            state_action_exetimes[action] = 0
-
-    
-    best_action = state_action_qvalues.loc[current_state][available_actions].nlargest().sample().index[0]
-
+while iteration < 1000:
+    all_states += [i.split("||")[0] for i in available_actions]
+    #best_action = state_action_qvalues.loc[current_state][available_actions].nlargest().sample().index[0]
+    available_state_action_qvalues = state_action_qvalues.loc[current_state][available_actions]
+    best_action = np.random.choice(available_state_action_qvalues.index, p=[i/available_state_action_qvalues.sum() for i in available_state_action_qvalues])
+    #best_action = state_action_qvalues.loc[current_state][available_actions].idxmax()
     next_state = best_action.split("||")[0]
+    if next_state.strip("/") not in unique_states:
+        unique_states.append(next_state.strip("/"))
     next_available_actions = get_actions(next_state)
-
     if next_state not in state_action_qvalues.index:
         state_action_qvalues.loc[next_state] = 0
     if next_state not in state_action_exetimes.index:
@@ -70,24 +70,31 @@ while iteration < 10000:
     for action in next_available_actions:
         if action not in state_action_qvalues.columns:
             state_action_qvalues[action] = 0
+        if action not in state_action_exetimes.columns:
+            state_action_exetimes[action] = 0
+        if state_action_exetimes.at[current_state, action] == 0:
             state_action_qvalues.at[next_state, action] = 10000
     
-    if state_action_exetimes.at[current_state, best_action] == 0:
-        reward = 10000
-    else:
-        reward = 1 / state_action_exetimes.at[current_state, best_action]
+    state_action_exetimes.at[current_state, best_action] += 1
+    reward = 1 / state_action_exetimes.at[current_state, best_action]
     
     max_next_state_qvalue = state_action_qvalues.loc[next_state][next_available_actions].max()
-
     state_action_qvalues.at[current_state, best_action] = reward + gamma * max_next_state_qvalue
 
-    state_action_exetimes.at[current_state, best_action] += 1
-
     iteration += 1
+    if not iteration % 100:
+        current_state = home
+        available_actions = get_actions(home)
+    else:
+        current_state = next_state
+        available_actions = next_available_actions
 
-    print("iteration: %s, current_state: %s, next_state: %s" % (iteration, current_state, next_state))
+    print("iteration: %s, unique_states: %s" % (iteration, len(unique_states)))
 
+print(len(list(set(all_states))))
+print(list(set(all_states)))
 
+'''
 state_action_qvalues.to_csv('state_action_qvalues.csv')
 state_action_exetimes.to_csv('state_action_exetimes.csv')
 
@@ -113,3 +120,4 @@ while click_number < 1000:
     print(click_number, len(unique_states))
 
 print(unique_states)
+'''
