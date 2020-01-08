@@ -55,9 +55,11 @@ for action in available_actions:
     state_action_exetimes[action] = 0
 
 while iteration < 1000:
+    # select best action
     available_state_action_qvalues = state_action_qvalues.loc[current_state][available_actions]
     best_action = np.random.choice(available_state_action_qvalues.index, p=[i/available_state_action_qvalues.sum() for i in available_state_action_qvalues])
     
+    # get next state
     next_state = best_action.split("||")[0]
     if next_state.strip("/") not in unique_states:
         unique_states.append(next_state.strip("/"))
@@ -66,6 +68,7 @@ while iteration < 1000:
     if next_state not in state_action_exetimes.index:
         state_action_exetimes.loc[next_state] = 0
 
+    # get next available actions
     next_available_actions = get_actions(next_state)
     for action in next_available_actions:
         if action not in state_action_qvalues.columns:
@@ -75,15 +78,15 @@ while iteration < 1000:
         if state_action_exetimes.at[next_state, action] == 0:
             state_action_qvalues.at[next_state, action] = 10000
     
-    # update current_state -> best_action quality value
+    # update current state -> best action quality value
     state_action_exetimes.at[current_state, best_action] += 1
     reward = 1 / state_action_exetimes.at[current_state, best_action]
     max_next_state_qvalue = state_action_qvalues.loc[next_state][next_available_actions].max()
     state_action_qvalues.at[current_state, best_action] = reward + gamma * max_next_state_qvalue
 
     iteration += 1
-    # return back to home every 100 iterations
-    if not iteration % 100: 
+    
+    if not iteration % 100: # return back to home every 100 iterations
         current_state = home
         available_actions = get_actions(home)
     else:
