@@ -64,7 +64,7 @@ while iteration < 1000:
     if next_state.strip("/") not in unique_states:
         unique_states.append(next_state.strip("/"))
     if next_state not in state_action_qvalues.index:
-        state_action_qvalues.loc[next_state] = 0
+        state_action_qvalues.loc[next_state] = 0.0
     if next_state not in state_action_exetimes.index:
         state_action_exetimes.loc[next_state] = 0
 
@@ -72,17 +72,18 @@ while iteration < 1000:
     next_available_actions = get_actions(next_state)
     for action in next_available_actions:
         if action not in state_action_qvalues.columns:
-            state_action_qvalues[action] = 0
+            state_action_qvalues[action] = 0.0
         if action not in state_action_exetimes.columns:
             state_action_exetimes[action] = 0
         if state_action_exetimes.at[next_state, action] == 0:
-            state_action_qvalues.at[next_state, action] = 10000
+            state_action_qvalues.at[next_state, action] = 10000.0
     
     # update current state -> best action quality value
     state_action_exetimes.at[current_state, best_action] += 1
     reward = 1 / state_action_exetimes.at[current_state, best_action]
     max_next_state_qvalue = state_action_qvalues.loc[next_state][next_available_actions].max()
     state_action_qvalues.at[current_state, best_action] = reward + gamma * max_next_state_qvalue
+    print(state_action_qvalues.at[current_state, best_action], reward + gamma * max_next_state_qvalue)
 
     iteration += 1
     
