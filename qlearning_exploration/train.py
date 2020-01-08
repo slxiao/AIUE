@@ -15,7 +15,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-home = "https://slxiao.github.io"
+home = "http://10.183.42.165:3000"
 
 
 def create_browser(webdriver_path):
@@ -54,8 +54,11 @@ for action in available_actions:
     state_action_qvalues[action] = 10000
     state_action_exetimes[action] = 0
 
+all_states = [current_state]
+
 while iteration < 1000:
     # select best action
+    all_states += [i.split("||")[0] for i in available_actions]
     available_state_action_qvalues = state_action_qvalues.loc[current_state][available_actions]
     best_action = np.random.choice(available_state_action_qvalues.index, p=[i/available_state_action_qvalues.sum() for i in available_state_action_qvalues])
     
@@ -83,7 +86,7 @@ while iteration < 1000:
     reward = 1 / state_action_exetimes.at[current_state, best_action]
     max_next_state_qvalue = state_action_qvalues.loc[next_state][next_available_actions].max()
     state_action_qvalues.at[current_state, best_action] = reward + gamma * max_next_state_qvalue
-    print(state_action_qvalues.at[current_state, best_action], reward + gamma * max_next_state_qvalue)
+    #print(state_action_qvalues.at[current_state, best_action], reward + gamma * max_next_state_qvalue)
 
     iteration += 1
     
@@ -93,5 +96,4 @@ while iteration < 1000:
     else:
         current_state = next_state
         available_actions = next_available_actions
-
-    print("iteration: %s, unique_states: %s" % (iteration, len(unique_states)))
+    print(next_state, [i.split("||")[0] for i in available_actions], "iteration: %s, unique_states: %s" % (iteration, len(unique_states)), len(list(set(all_states))))

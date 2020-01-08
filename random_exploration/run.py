@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup as bs
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-home = "https://slxiao.github.io"
+home = "http://10.183.42.165:3000"
 
 
 def create_browser(webdriver_path):
@@ -46,3 +46,5 @@ while iteration < 1000:
     if not iteration % 100:
         current_link = home
     print("iteration: %s, unique_states: %s" % (iteration, len(unique_links)))
+
+print(unique_links)
