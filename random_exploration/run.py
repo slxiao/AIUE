@@ -19,32 +19,42 @@ def create_browser(webdriver_path):
     browser_options.add_argument('--no-sandbox')
     return webdriver.Chrome(webdriver_path, chrome_options=browser_options)
 
+browser = create_browser('/usr/bin/chromedriver')
 
-def get_hyperlinks(browser, url):
-    browser.get(url)
+
+def get_hyperlinks():
     html = bs(browser.page_source, "lxml")
-
     links = []
     for item in html.find_all("a"):
         if "href" in item.attrs and item.attrs["href"].startswith("/") and item.attrs["href"] != "/2018/01/01/demo/" and item.text.strip():
             links.append(item.attrs["href"])
-    return [home + i for i in links]
+    return links
 
-
-browser = create_browser('/usr/bin/chromedriver')
-
-iteration = 0
-current_link = home
-unique_links = [current_link]
-
-while iteration < 1000:
-    current_link = random.choice(get_hyperlinks(browser, current_link))
-    if current_link.strip("/") not in unique_links:
-        unique_links.append(current_link.strip("/"))
+def loop():
+    iteration = 0
+    current_link = "/"
+    browser.get(home)
+    unique_links = [current_link]
+    points = []
+    while iteration < 1000:
+        if current_link != "/":
+            browser.find_element_by_xpath('//a[contains(@href,"%s")]' % current_link).click()
+        current_link = random.choice(get_hyperlinks())
+        if current_link.strip("/") not in unique_links:
+            unique_links.append(current_link.strip("/"))
     
-    iteration += 1
-    if not iteration % 100:
-        current_link = home
-    print("iteration: %s, unique_states: %s" % (iteration, len(unique_links)))
+        iteration += 1
+        if not iteration % 100:
+            current_link = "/"
+            browser.get(home)
+        #print("iteration: %s, unique_links: %s" % (iteration, len(unique_links)))
+        points.append((iteration, len(unique_links)))
 
-print(unique_links)
+    return points
+
+
+result = []
+for i in range(10):
+    result.append((i, loop()))
+
+print(result)
