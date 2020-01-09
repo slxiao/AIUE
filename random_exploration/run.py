@@ -36,7 +36,7 @@ def loop():
     browser.get(home)
     unique_links = [current_link]
     points = []
-    while iteration < 1000:
+    while iteration < 10000:
         if current_link != "/":
             browser.find_element_by_xpath('//a[contains(@href,"%s")]' % current_link).click()
         current_link = random.choice(get_hyperlinks())
@@ -44,7 +44,7 @@ def loop():
             unique_links.append(current_link.strip("/"))
     
         iteration += 1
-        if not iteration % 100:
+        if not iteration % 1000:
             current_link = "/"
             browser.get(home)
         #print("iteration: %s, unique_links: %s" % (iteration, len(unique_links)))

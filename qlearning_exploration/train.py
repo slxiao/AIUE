@@ -59,7 +59,7 @@ def loop():
     all_states = [current_state]
 
     points = []
-    while iteration < 1000:
+    while iteration < 10000:
         # select best action
         all_states += [i.split("||")[0] for i in available_actions]
         available_state_action_qvalues = state_action_qvalues.loc[current_state][available_actions]
@@ -94,14 +94,14 @@ def loop():
 
         iteration += 1
     
-        if not iteration % 100: # return back to home every 100 iterations
+        if not iteration % 1000: # return back to home every 100 iterations
             browser.get(home)
             current_state = "/"
             available_actions = get_actions()
         else:
             current_state = next_state
             available_actions = next_available_actions
-        #print(next_state, "iteration: %s, unique_states: %s" % (iteration, len(unique_states)), len(list(set(all_states))))
+        #print("iteration: %s, unique_states: %s" % (iteration, len(unique_states)))
         points.append((iteration, len(unique_states)))
     return points
 

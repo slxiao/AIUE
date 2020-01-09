@@ -51,7 +51,7 @@ class Links extends Component {
           this.props.indices.map((item) =>
           <Route path={"/link" + item}> 
             {
-              item < 100 ? <Links indices={range(9, 10*item)} /> : <h2>end</h2>
+              item < 1000 ? <Links indices={range(9, 10*item)} /> : <h2>end</h2>
             }
             
           </Route>
